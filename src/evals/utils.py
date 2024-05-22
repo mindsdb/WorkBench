@@ -635,17 +635,22 @@ def generate_results(queries_path, model_name, tool_selection="all"):
     results = pd.DataFrame(columns=["query", "function_calls", "full_response", "error"])
     if model_name == "gpt-3.5":
         OPENAI_KEY = open("openai_key.txt", "r").read()
-        llm = OpenAI(
-            model_name="gpt-3.5-turbo-instruct",
-            openai_api_key=OPENAI_KEY,
-            temperature=0,
-            model_kwargs={"seed": 42},
-        )
+        kwargs = {
+            "model_name": "gpt-3.5-turbo",
+            "openai_api_key": OPENAI_KEY,
+            "temperature": 0,
+            "model_kwargs": {"seed": 42},
+        }
+        if os.path.exists("openai_api_base.txt"):
+            kwargs["openai_api_base"] = open("openai_api_base.txt", "r").read()
+        llm = ChatOpenAI(**kwargs)
     elif model_name == "gpt-4":
         OPENAI_KEY = open("openai_key.txt", "r").read()
+        OPENAI_API_BASE = open("openai_api_base.txt", "r").read() if os.path.exists("openai_api_base.txt") else None
         llm = ChatOpenAI(
             model_name="gpt-4-0125-preview",
             openai_api_key=OPENAI_KEY,
+            openai_api_base=OPENAI_API_BASE,
             temperature=0,
             model_kwargs={"seed": 42},
         )
