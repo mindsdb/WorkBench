@@ -22,7 +22,7 @@ from src.tools.toolkits import (
 
 
 DOMAINS = [calendar, email, analytics, project_management, customer_relationship_manager]
-AVAILABLE_LLMS = [
+AVAILABLE_ORIGINAL_LLMS = [
     "gpt-4",
     "gpt-3.5",
     "claude-2",
@@ -633,47 +633,7 @@ def generate_results(queries_path, model_name, tool_selection="all"):
     queries = queries_df["query"].tolist()
 
     results = pd.DataFrame(columns=["query", "function_calls", "full_response", "error"])
-    if model_name == "gpt-3.5":
-        OPENAI_KEY = open("openai_key.txt", "r").read()
-        llm = OpenAI(
-            model_name="gpt-3.5-turbo-instruct",
-            openai_api_key=OPENAI_KEY,
-            temperature=0,
-            model_kwargs={"seed": 42},
-        )
-    elif model_name == "gpt-4":
-        OPENAI_KEY = open("openai_key.txt", "r").read()
-        llm = ChatOpenAI(
-            model_name="gpt-4-0125-preview",
-            openai_api_key=OPENAI_KEY,
-            temperature=0,
-            model_kwargs={"seed": 42},
-        )
-    elif model_name == "claude-2":
-        ANTHROPIC_KEY = open("anthropic_key.txt", "r").read()
-        llm = ChatAnthropic(
-            model_name="claude-2",
-            anthropic_api_key=ANTHROPIC_KEY,
-            temperature=0,
-        )
-    elif model_name == "llama2-70b":
-        ANYSCALE_KEY = open("anyscale_key.txt", "r").read()
-        llm = ChatAnyscale(
-            model="meta-llama/Llama-2-70b-chat-hf",
-            anyscale_api_key=ANYSCALE_KEY,
-            temperature=0,
-        )
-    elif model_name == "mistral-8x7B":
-        ANYSCALE_KEY = open("anyscale_key.txt", "r").read()
-        llm = ChatAnyscale(
-            model="mistralai/Mixtral-8x7B-Instruct-v0.1",
-            anyscale_api_key=ANYSCALE_KEY,
-            temperature=0,
-        )
-
-    else:
-        raise ValueError("Invalid --model_name. Must be one of " + ", ".join(AVAILABLE_LLMS))
-
+    llm = get_llm(model_name)
     tools = get_toolkits(toolkits)
 
     for i, query in enumerate(queries):
@@ -721,6 +681,8 @@ def generate_results(queries_path, model_name, tool_selection="all"):
                 error = "Context window exceeded"
             else:
                 print(f"Unknown error with query: {query}")
+                if hasattr(e, 'message'):
+                    print(f"Details: {e.message}")
                 error = str(e)
 
         print(f"### Query: {query}")
@@ -756,3 +718,76 @@ def generate_results(queries_path, model_name, tool_selection="all"):
     save_path = os.path.join(save_dir, model_name + "_" + tool_selection + "_" + current_datetime + ".csv")
     results.to_csv(save_path, index=False, quoting=csv.QUOTE_ALL)
     return results
+
+
+def get_llm(model_name):
+    # if a mindsdb base url is present, we use its inference endpoints
+    if os.path.exists("mindsdb_base_url.txt"):
+        MINDSDB_BASE_URL = open("mindsdb_base_url.txt", "r").read()
+        llm = _get_llm_mindsdb(model_name, base_url=MINDSDB_BASE_URL)
+
+    # otherwise, trigger paper's original model dispatch
+    else:
+        llm = _get_llm_(model_name)
+
+    return llm
+
+
+def _get_llm_(model_name):
+    if model_name == "gpt-3.5":
+        OPENAI_KEY = open("openai_key.txt", "r").read()
+        llm = OpenAI(
+            model_name="gpt-3.5-turbo-instruct",
+            openai_api_key=OPENAI_KEY,
+            temperature=0,
+            model_kwargs={"seed": 42},
+        )
+    elif model_name == "gpt-4":
+        OPENAI_KEY = open("openai_key.txt", "r").read()
+        llm = ChatOpenAI(
+            model_name="gpt-4-0125-preview",
+            openai_api_key=OPENAI_KEY,
+            temperature=0,
+            model_kwargs={"seed": 42},
+        )
+    elif model_name == "claude-2":
+        ANTHROPIC_KEY = open("anthropic_key.txt", "r").read()
+        llm = ChatAnthropic(
+            model_name="claude-2",
+            anthropic_api_key=ANTHROPIC_KEY,
+            temperature=0,
+        )
+    elif model_name == "llama2-70b":
+        ANYSCALE_KEY = open("anyscale_key.txt", "r").read()
+        llm = ChatAnyscale(
+            model="meta-llama/Llama-2-70b-chat-hf",
+            anyscale_api_key=ANYSCALE_KEY,
+            temperature=0,
+        )
+    elif model_name == "mistral-8x7B":
+        ANYSCALE_KEY = open("anyscale_key.txt", "r").read()
+        llm = ChatAnyscale(
+            model="mistralai/Mixtral-8x7B-Instruct-v0.1",
+            anyscale_api_key=ANYSCALE_KEY,
+            temperature=0,
+        )
+    else:
+        raise ValueError("Invalid --model_name. Must be one of " + ", ".join(AVAILABLE_ORIGINAL_LLMS))
+
+    return llm
+
+
+def _get_llm_mindsdb(model_name, base_url='https://llm.mdb.ai'):
+    # if file exists
+    if os.path.exists("mindsdb_key.txt"):
+        OPENAI_KEY = open("mindsdb_key.txt", "r").read()
+    else:
+        raise Exception("MindsDB base URL is present but no key file found. Please store your key as `mindsdb_key.txt`.")  # noqa
+    llm = ChatOpenAI(
+        model_name=model_name,
+        base_url=base_url,
+        openai_api_key=OPENAI_KEY,
+        temperature=0,
+        model_kwargs={"seed": 42},
+    )
+    return llm
