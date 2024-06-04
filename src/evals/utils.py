@@ -790,4 +790,5 @@ def _get_llm_mindsdb(model_name, base_url='https://llm.mdb.ai'):
         temperature=0,
         model_kwargs={"seed": 42},
     )
+    print('got_llm')
     return llm
