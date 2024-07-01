@@ -21,8 +21,6 @@ full_tools_list = [
     "customer_relationship_manager",
 ]
 
-new_models = ['llama-3-8b', 'llama-3-70b']
-
 arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument(
     "--tools",
@@ -53,9 +51,12 @@ args = arg_parser.parse_args()
 all_tools_in_prompt = args.all_tools
 
 if __name__ == "__main__":
-    tools = args.tools if len(args.tools) else full_tools_list
+    # tools = args.tools if len(args.tools) else full_tools_list
     # models = args.models if len(args.models) else AVAILABLE_ORIGINAL_LLMS
-    models = new_models
+    tools = full_tools_list
+    all_tools_in_prompt = True
+    models = ['llama-3-8b', 'llama-3-70b', 'gemini-1.5-pro', 'gpt-4o']
+
     for model in models:
         total_correct = 0
         total_incorrect = 0
