@@ -4,12 +4,9 @@ import sys
 project_root = os.path.abspath(os.path.curdir)
 sys.path.append(project_root)
 
-from src.evals.utils import AVAILABLE_ORIGINAL_LLMS, generate_results
+from src.evals.utils import AVAILABLE_LLMS, generate_results
 
-# new_models = ['llama-3-8b', 'llama-3-70b']
-new_models = ['llama-3-70b']
-
-models = new_models
+models = AVAILABLE_LLMS
 
 query_paths = [
     "data/processed/queries_and_answers/email_queries_and_answers.csv",

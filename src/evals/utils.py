@@ -4,7 +4,7 @@ import pandas as pd
 import random
 import ast
 from langchain_openai import ChatOpenAI, OpenAI
-from langchain_community.chat_models.anthropic import ChatAnthropic
+from langchain_anthropic import ChatAnthropic
 from langchain_community.chat_models.anyscale import ChatAnyscale
 from langchain.agents import initialize_agent, AgentType
 import csv
@@ -29,6 +29,32 @@ AVAILABLE_ORIGINAL_LLMS = [
     "llama2-70b",
     "mistral-8x7B",
 ]
+AVAILABLE_LLMS = AVAILABLE_ORIGINAL_LLMS + [
+    'claude-3.5-sonnet',
+    'claude-3-opus',
+    'claude-3-sonnet',
+    'claude-3-haiku',
+    'llama-3-70b',
+    'llama-3-8b',
+    'gemini-1.5-pro',
+    'gpt-4o',
+    'gpt-4-turbo',
+]
+
+OPENAI_MAP = {
+    "gpt-3.5": "gpt-3.5-turbo-instruct",
+    "gpt-4": "gpt-4-0125-preview",
+    "gpt-4-turbo": "gpt-4-turbo",
+    "gpt-4o": "gpt-4o",
+}
+
+ANTHROPIC_MAP = {
+    "claude-3.5-sonnet": "claude-3-5-sonnet-20240620",
+    "claude-3-opus": "claude-3-opus-20240229",
+    "claude-3-sonnet": "claude-3-sonnet-20240229",
+    "claude-3-haiku": "claude-3-haiku-20240307",
+    "claude-2": "claude-2.1",
+}
 
 
 def convert_agent_action_to_function_call(action):
@@ -734,26 +760,25 @@ def get_llm(model_name):
 
 
 def _get_llm_(model_name):
-    if model_name == "gpt-3.5":
+    if "gpt" in model_name:
         OPENAI_KEY = open("openai_key.txt", "r").read()
-        llm = OpenAI(
-            model_name="gpt-3.5-turbo-instruct",
+        model = OPENAI_MAP[model_name]
+        handler = OpenAI if model_name == "gpt-3.5" else ChatOpenAI
+        llm = handler(
+            model_name=model,
             openai_api_key=OPENAI_KEY,
             temperature=0,
             model_kwargs={"seed": 42},
         )
-    elif model_name == "gpt-4":
-        OPENAI_KEY = open("openai_key.txt", "r").read()
-        llm = ChatOpenAI(
-            model_name="gpt-4-0125-preview",
-            openai_api_key=OPENAI_KEY,
-            temperature=0,
-            model_kwargs={"seed": 42},
-        )
-    elif model_name == "claude-2":
+    elif 'claude' in model_name:
+        if model_name not in ANTHROPIC_MAP:
+            raise Exception(f"Model {model_name} is not a valid Anthropic model!")
+        else:
+            model = ANTHROPIC_MAP[model_name]
+
         ANTHROPIC_KEY = open("anthropic_key.txt", "r").read()
         llm = ChatAnthropic(
-            model_name="claude-2",
+            model_name=model,
             anthropic_api_key=ANTHROPIC_KEY,
             temperature=0,
         )
@@ -772,7 +797,7 @@ def _get_llm_(model_name):
             temperature=0,
         )
     else:
-        raise ValueError("Invalid --model_name. Must be one of " + ", ".join(AVAILABLE_ORIGINAL_LLMS))
+        raise ValueError("Invalid --model_name. Must be one of " + ", ".join(AVAILABLE_LLMS))
 
     return llm
 

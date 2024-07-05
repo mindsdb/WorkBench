@@ -4,7 +4,7 @@ import argparse
 
 project_root = os.path.abspath(os.path.curdir)
 sys.path.append(project_root)
-from src.evals.utils import AVAILABLE_ORIGINAL_LLMS, get_latest_results_from_dir
+from src.evals.utils import AVAILABLE_LLMS, get_latest_results_from_dir
 
 # ignore pandas warning
 import warnings
@@ -32,7 +32,7 @@ arg_parser.add_argument(
     "--models",
     action="append",
     default=[],
-    help=f"Call with --models <model 1> --models <model 2> etc. Defaults to {AVAILABLE_ORIGINAL_LLMS}.",
+    help=f"Call with --models <model 1> --models <model 2> etc. Defaults to {AVAILABLE_LLMS}.",
 )
 arg_parser.add_argument(
     "--print_errors",
@@ -52,7 +52,7 @@ all_tools_in_prompt = args.all_tools
 
 if __name__ == "__main__":
     # tools = args.tools if len(args.tools) else full_tools_list
-    # models = args.models if len(args.models) else AVAILABLE_ORIGINAL_LLMS
+    # models = args.models if len(args.models) else AVAILABLE_LLMS
     tools = full_tools_list
     all_tools_in_prompt = True
     models = ['llama-3-8b', 'llama-3-70b', 'gemini-1.5-pro', 'gpt-4o']

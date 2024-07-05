@@ -4,9 +4,9 @@ import sys
 project_root = os.path.abspath(os.path.curdir)
 sys.path.append(project_root)
 
-from src.evals.utils import AVAILABLE_ORIGINAL_LLMS, generate_results
+from src.evals.utils import AVAILABLE_LLMS, generate_results
 
-models = AVAILABLE_ORIGINAL_LLMS
+models = AVAILABLE_LLMS
 
 query_paths = [
     "data/processed/queries_and_answers/email_queries_and_answers.csv",

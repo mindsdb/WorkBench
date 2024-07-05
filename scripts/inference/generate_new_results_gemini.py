@@ -4,7 +4,7 @@ import sys
 project_root = os.path.abspath(os.path.curdir)
 sys.path.append(project_root)
 
-from src.evals.utils import AVAILABLE_ORIGINAL_LLMS, generate_results
+from src.evals.utils import AVAILABLE_LLMS, generate_results
 
 new_models = ['gemini-1.5-pro']
 
